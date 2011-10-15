@@ -7,10 +7,30 @@ def die message=''
   exit
 end
 
-@internals = [:aliases, :list]
+@queue = []
+
+@internals = [:init, :aliases, :list]
 # internal implementations
+@aliases = <<-EOA
+alias td='/Users/edh/ruby/todo/td.rb'
+alias td.clear='td clear'
+alias td.head='td first'
+alias td.alias='td aliases'
+alias td.init='td init'
+alias td.list='td list'
+alias td.pop='td pop'
+alias td.shift='td shift'
+EOA
+
+def init
+  @queue.clear
+  dump_yaml @queue
+  seriallize(".alias", @aliases) {|f,o| f.puts o}
+  puts "./.todo intialized; Now do: 'source ./.alias'"
+end
+
 def aliases
-  puts '(none)'
+  puts @aliases
 end
 
 def list
@@ -42,7 +62,6 @@ def dump_yaml object
   seriallize(todo_path, object) {|f, o| YAML::dump(o, f)}
 end
 
-@queue = []
 if File.exists?(todo_path) and not File.zero?(todo_path)
   @queue = load_yaml 
 
