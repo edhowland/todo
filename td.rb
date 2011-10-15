@@ -7,6 +7,16 @@ def die message=''
   exit
 end
 
+@internals = [:aliases, :list]
+# internal implementations
+def aliases
+  puts '(none)'
+end
+
+def list
+  puts @queue; die
+end
+
 def todo_path
   "./.todo" # or ~/.todo
 end
@@ -43,8 +53,12 @@ if File.exists?(todo_path) and not File.zero?(todo_path)
 end
 
 if ARGV.size == 1 # must be command
-  cmd=ARGV.shift
-  puts @queue.send(cmd.to_sym)
+  cmd=ARGV.shift.to_sym
+  if @internals.include?(cmd)
+    self.send cmd
+  else 
+    puts @queue.send(cmd.to_sym)
+  end
 else
   message = ARGV.join ' '
   @queue << message unless message.empty?

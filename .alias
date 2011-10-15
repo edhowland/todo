@@ -1,0 +1,6 @@
+alias td='/Users/edh/ruby/todo/td.rb'
+alias td.clear='td clear'
+alias td.head='td first'
+alias td.list='td inspect'
+alias td.pop='td pop'
+alias td.shift='td shift'
