@@ -41,7 +41,13 @@ if File.exists?(todo_path) and not File.zero?(todo_path)
     exit
   end
 end
-message = ARGV.join ' '
-@queue << message unless message.empty?
+
+if ARGV.size == 1 # must be command
+  cmd=ARGV.shift
+  puts @queue.send(cmd.to_sym)
+else
+  message = ARGV.join ' '
+  @queue << message unless message.empty?
+end
 
 dump_yaml @queue
