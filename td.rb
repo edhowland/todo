@@ -6,25 +6,23 @@ def todo_path
   "./.todo" # or ~/.todo
 end
 
-def from_yaml
+def yamlize path, object=nil, &blk 
   begin
-    File.open(todo_path) do |f|  
-      YAML::load(f)
-    end
+    yield path, object
   rescue Exception => e
-    $stderr.puts "Unable to open yaml : #{todo_path} :  #{e.message}"
+    $stderr.puts "Unable to #{object.nil? ? "open" : "write"} yaml : #{path} :  #{e.message}"
+  end
+end
+
+def from_yaml
+  yamlize todo_path do |p, o| 
+    File.open(p) {|f| YAML::load(f)}
   end
 end
 
 def dump_yaml object
-  begin
-    File.open(todo_path, "w") do |f|  
-      YAML::dump(object, f)
-    end
-    true
-  rescue Exception => e
-    $stderr.puts "Unable to write yaml #{e.message}"
-    false
+  yamlize todo_path, object do |p, o|
+    File.open(p, "w") {|f| YAML::dump(o, f)}
   end
 end
 
