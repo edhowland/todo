@@ -40,8 +40,8 @@ if File.exists?(todo_path) and not File.zero?(todo_path)
     puts @queue.last
     exit
   end
-  message = ARGV.join ' ' unless ARGV.empty?
-  @queue << message
 end
+message = ARGV.join ' '
+@queue << message unless message.empty?
 
 dump_yaml @queue
