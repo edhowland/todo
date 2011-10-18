@@ -7,6 +7,46 @@ def die message=''
   exit
 end
 
+class Command
+  def <<(argv, message)
+    command = argv.shift.to_sym
+    puts "td #{command} #{message}"
+  end
+end
+
+class Options
+  def <<(argv, message)
+    option = argv.pop
+
+p option
+    if option =="-f"
+      message = 'FIXME: ' + message
+    elsif option == '-r'
+      message = 'REMOVEME: ' + message
+    else
+      message = 'TODO: ' + message
+    end
+    return argv, message
+  end
+end
+
+class Arguments
+  def <<(argv)
+    arry = []
+    2.times {arry << argv.shift}
+p arry
+    return arry, argv.join(' ')
+  end
+end
+
+command = Command.new
+options = Options.new
+arguments = Arguments.new
+
+# parse and execute command line
+command.<<( *options.<<( *arguments.<<(ARGV) ) )
+
+exit
 @queue = []
 
 @internals = [:init, :aliases, :list]
