@@ -66,7 +66,9 @@ class Arguments
       return argv, nil
     elsif argv.length == 2
       return argv.pop
-    2.times {arry << argv.shift}
+    else
+      2.times {arry << argv.shift}
+    end
     return arry, argv.join(' ')
   end
 end
@@ -133,7 +135,7 @@ options = Options.new
 arguments = Arguments.new
 
 # parse and execute command line
-command.<<( *options.<<( *arguments.<<(ARGV) ) )
+command.<<( *options.<<( *arguments << ARGV ))
 
 
 
