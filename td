@@ -8,23 +8,52 @@ def die message=''
 end
 
 class Command
+  def initialize queue=[]
+    @queue = queue
+  end
+  
+  def execute_with_args command, *args
+    @queue.send command.to_sym, *args
+  end
+  
+  def execute_no_args
+    @queue.send command.to_sym
+  end
+  
+  def execute command, *args
+    result = if args.empty?
+              execute_no_args command
+            else
+              execute_with_args command, *args
+            end
+    puts result unless result.nil? or not result.kind_of?(String)
+  end
+  
   def <<(argv, message)
-    command = argv.shift.to_sym
-    puts "td #{command} #{message}"
+    command = argv.shift
+    unless message.nil? or message.empty?
+      execute command, message
+    else
+      execute command
+    end
+    # p @queue
+    # puts "td #{command} #{message}"
   end
 end
 
 class Options
   def <<(argv, message)
+    if argv.length > 1
     option = argv.pop
 
-p option
-    if option =="-f"
-      message = 'FIXME: ' + message
-    elsif option == '-r'
-      message = 'REMOVEME: ' + message
-    else
-      message = 'TODO: ' + message
+      if option =="-f"
+        message = 'FIXME: ' + message
+      elsif option == '-r'
+        message = 'REMOVEME: ' + message
+      else
+        message = option + '' + message
+        message = 'TODO: ' + message
+      end
     end
     return argv, message
   end
@@ -33,20 +62,17 @@ end
 class Arguments
   def <<(argv)
     arry = []
+    if argv.length == 1
+      return argv, nil
+    elsif argv.length == 2
+      return argv.pop
     2.times {arry << argv.shift}
-p arry
     return arry, argv.join(' ')
   end
 end
 
-command = Command.new
-options = Options.new
-arguments = Arguments.new
 
-# parse and execute command line
-command.<<( *options.<<( *arguments.<<(ARGV) ) )
 
-exit
 @queue = []
 
 @internals = [:init, :aliases, :list]
@@ -102,25 +128,34 @@ def dump_yaml object
   seriallize(todo_path, object) {|f, o| YAML::dump(o, f)}
 end
 
-if File.exists?(todo_path) and not File.zero?(todo_path)
-  @queue = load_yaml 
+command = Command.new load_yaml
+options = Options.new
+arguments = Arguments.new
 
-  if ARGV.empty?
-    puts @queue.last
-    exit
-  end
-end
+# parse and execute command line
+command.<<( *options.<<( *arguments.<<(ARGV) ) )
 
-if ARGV.size == 1 # must be command
-  cmd=ARGV.shift.to_sym
-  if @internals.include?(cmd)
-    self.send cmd
-  else 
-    puts @queue.send(cmd.to_sym)
-  end
-else
-  message = ARGV.join ' '
-  @queue << message unless message.empty?
-end
 
-dump_yaml @queue
+
+# if File.exists?(todo_path) and not File.zero?(todo_path)
+#   @queue = load_yaml 
+# 
+#   if ARGV.empty?
+#     puts @queue.last
+#     exit
+#   end
+# end
+# 
+# if ARGV.size == 1 # must be command
+#   cmd=ARGV.shift.to_sym
+#   if @internals.include?(cmd)
+#     self.send cmd
+#   else 
+#     puts @queue.send(cmd.to_sym)
+#   end
+# else
+#   message = ARGV.join ' '
+#   @queue << message unless message.empty?
+# end
+# 
+# dump_yaml @queue
