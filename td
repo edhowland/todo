@@ -7,72 +7,53 @@ def die message=''
   exit
 end
 
-class Command
-  def initialize queue=[]
-    @queue = queue
-  end
-  
-  def execute_with_args command, *args
-    @queue.send command.to_sym, *args
-  end
-  
-  def execute_no_args
-    @queue.send command.to_sym
-  end
-  
-  def execute command, *args
-    result = if args.empty?
-              execute_no_args command
-            else
-              execute_with_args command, *args
-            end
-    puts result unless result.nil? or not result.kind_of?(String)
-  end
-  
-  def <<(argv, message)
-    command = argv.shift
-    unless message.nil? or message.empty?
-      execute command, message
-    else
-      execute command
-    end
-    # p @queue
-    # puts "td #{command} #{message}"
+def walk tree, stack=[]
+  return stack if tree.nil? or tree.empty?
+  stack << tree.first
+  walk tree[1], stack
+  walk tree[2], stack
+  stack 
+end
+
+def command argv, tree
+  tree[0] = argv.shift
+end
+
+def option argv, tree
+  raise "Syntax error: expected option" unless argv[0] =~ /^-/
+  tree[2] = [argv.shift]
+end
+
+def arg argv, tree
+  raise "Argument empty error" if argv.empty?
+  if tree[1].nil?
+    tree[1] = [argv.shift]
+  else
+    tree[1] = [tree[1][0] + ' ' + argv.shift]
   end
 end
 
-class Options
-  def <<(argv, message)
-    if argv.length > 1
-    option = argv.pop
-
-      if option =="-f"
-        message = 'FIXME: ' + message
-      elsif option == '-r'
-        message = 'REMOVEME: ' + message
-      else
-        message = option + '' + message
-        message = 'TODO: ' + message
-      end
-    end
-    return argv, message
+def zero_or_one argv, tree, &blk
+  begin
+    yield argv, tree
+  rescue Exception => e
   end
 end
 
-class Arguments
-  def <<(argv)
-    arry = []
-    if argv.length == 1
-      return argv, nil
-    elsif argv.length == 2
-      return argv.pop
-    else
-      2.times {arry << argv.shift}
-    end
-    return arry, argv.join(' ')
+def zero_or_more argv, tree, &blk
+  begin
+    yield argv, tree
+    zero_or_more argv, tree, &blk
+  rescue Exception => e
   end
 end
 
+def expression argv, tree=[]
+  command argv, tree
+  zero_or_one(argv, tree) {|a, t| option a,t }
+  zero_or_more(argv, tree) {|a, t| arg a,t}
+  tree
+end
 
 
 @queue = []
@@ -130,34 +111,16 @@ def dump_yaml object
   seriallize(todo_path, object) {|f, o| YAML::dump(o, f)}
 end
 
-command = Command.new load_yaml
-options = Options.new
-arguments = Arguments.new
+# main routine
 
-# parse and execute command line
-command.<<( *options.<<( *arguments << ARGV ))
+def execute queue, cmd
+  com = cmd.shift.to_sym
+  queue.send com, *cmd
+end
 
+tree = expression ARGV
+cmd = walk(tree)
 
-
-# if File.exists?(todo_path) and not File.zero?(todo_path)
-#   @queue = load_yaml 
-# 
-#   if ARGV.empty?
-#     puts @queue.last
-#     exit
-#   end
-# end
-# 
-# if ARGV.size == 1 # must be command
-#   cmd=ARGV.shift.to_sym
-#   if @internals.include?(cmd)
-#     self.send cmd
-#   else 
-#     puts @queue.send(cmd.to_sym)
-#   end
-# else
-#   message = ARGV.join ' '
-#   @queue << message unless message.empty?
-# end
-# 
-# dump_yaml @queue
+@queue = load_yaml
+puts execute @queue, cmd
+dump_yaml @queue
