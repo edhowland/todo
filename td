@@ -66,11 +66,13 @@ class Internals
   def init
     @queue.clear
     dump_yaml @queue
+    ".todo initialized"
   end
 
   def aliases
-    puts <<-EOA
+    <<-EOA
 alias td.='td last'
+alias td.add='td push'
 alias td.clear='td clear'
 alias td.head='td first'
 alias td.alias='td aliases'
@@ -78,7 +80,7 @@ alias td.init='td init'
 alias td.list='td clone'
 alias td.pop='td pop'
 alias td.shift='td shift'
-alias td.put='td unshiftVp walk(@tree)
+alias td.put='td unshift'
 EOA
   end
 
