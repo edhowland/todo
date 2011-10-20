@@ -61,29 +61,24 @@ end
 @internals = [:init, :aliases, :list]
 # internal implementations
 @aliases = <<-EOA
-alias td='/Users/edh/ruby/todo/td.rb'
+alias td.='td last'
 alias td.clear='td clear'
 alias td.head='td first'
 alias td.alias='td aliases'
 alias td.init='td init'
-alias td.list='td list'
+alias td.list='td clone'
 alias td.pop='td pop'
 alias td.shift='td shift'
+alias td.put='td unshift'
 EOA
 
 def init
   @queue.clear
   dump_yaml @queue
-  seriallize(".alias", @aliases) {|f,o| f.puts o}
-  puts "./.todo intialized; Now do: 'source ./.alias'"
 end
 
 def aliases
   puts @aliases
-end
-
-def list
-  puts @queue; die
 end
 
 def todo_path
