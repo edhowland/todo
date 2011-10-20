@@ -58,9 +58,18 @@ end
 
 @queue = []
 
-@internals = [:init, :aliases, :list]
-# internal implementations
-@aliases = <<-EOA
+class Internals
+  def initialize queue
+    @queue = queue
+  end
+
+  def init
+    @queue.clear
+    dump_yaml @queue
+  end
+
+  def aliases
+    puts <<-EOA
 alias td.='td last'
 alias td.clear='td clear'
 alias td.head='td first'
@@ -69,16 +78,31 @@ alias td.init='td init'
 alias td.list='td clone'
 alias td.pop='td pop'
 alias td.shift='td shift'
-alias td.put='td unshift'
+alias td.put='td unshiftVp walk(@tree)
 EOA
+  end
 
-def init
-  @queue.clear
-  dump_yaml @queue
-end
+  def help
+    puts <<-EOH
+  Usage: td command [option] [argument, ...]
+    Description: td manages a TODO list (./.todo) in a folder.
+  
+    Commands:
+       aliases        Prints a list of aliases
+       clear          Clears the list
+       clone          Prints the entire list
+       first          Display the hea of the list
+       help           This message
+       init           Creates an empty ./.todo file
+       last           Display the last message
+       pop            Display and remove the last message
+       push    ARGs   Adds ARGs to the end of the list 
+       shift          Display and remove the first message
+       unshift ARGs   Add ARGs to the head of the list
 
-def aliases
-  puts @aliases
+       Options: N/A
+  EOH
+  end
 end
 
 def todo_path
@@ -107,10 +131,17 @@ def dump_yaml object
 end
 
 # main routine
+@internals = Internals.new @queue
 
 def execute queue, cmd
   com = cmd.shift.to_sym
-  queue.send com, *cmd
+  if queue.respond_to? com
+    queue.send com, *cmd
+  elsif @internals.respond_to? com
+    @internals.send com, *cmd
+  else
+    die "td: Unknown command: #{com}"
+  end
 end
 
 tree = expression ARGV

@@ -1,7 +1,3 @@
-@t = [:cmd, nil, nil]
-@tdo = [:cmd, ["arg|"], [:op1]]
-@td = [:cmd, nil, ["arg|"]]
-
 
 def walk tree, stack=[]
   return stack if tree.nil? or tree.empty?
