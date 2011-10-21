@@ -59,33 +59,43 @@ end
 class Internals
   attr_accessor :path, :queue
   
-  def initialize path='./.todo', queue=nil
+  def initialize path='./.todo'
     @path = path
-    @queue = queue || load_yaml 
+    @path = File.expand_path '~/.todo' unless File.exists?(@path)
+    @queue = load_yaml 
   end
 
   def init path=nil
+    @path="#{path}/.todo" unless path.nil?
     @queue.clear
-    ".todo initialized"
+    "#{@path} initialized"
+  end
+
+  def info
+    die "TODO list atL #{@path}"
   end
 
   def aliases
-    <<-EOA
+    puts <<-EOA
 alias td.='td last'
 alias td.add='td push'
 alias td.clear='td clear'
 alias td.head='td first'
+alias td.help='td help'
 alias td.alias='td aliases'
 alias td.init='td init'
+alias td.info='td info'
 alias td.list='td clone'
 alias td.pop='td pop'
 alias td.shift='td shift'
 alias td.put='td unshift'
+alias td.path='td info'
 EOA
+  die ''
   end
 
   def help
-    puts <<-EOH
+    die <<-EOH
   Usage: td command [option] [argument, ...]
     Description: td manages a TODO list (./.todo) in a folder.
   
@@ -96,6 +106,7 @@ EOA
        first          Display the hea of the list
        help           This message
        init           Creates an empty ./.todo file
+       info           Display location of .todo file
        last           Display the last message
        pop            Display and remove the last message
        push    ARGs   Adds ARGs to the end of the list 
@@ -112,16 +123,19 @@ EOA
   
   private
   def seriallize path, object=nil, &blk 
+    result=[]
     begin
       args = [path]; args << "w" unless object.nil?
-      result=[]
         File.open(*args) do |f| 
-       result = yield f, object
+        result = yield f, object
       end
-      result
+    rescue Errno::ENOENT => e
+      # puts "#{@path} : not found"
+      #  be silent
     rescue Exception => e
-      die "Unable to #{object.nil? ? "open" : "write"} yaml : #{path} :  #{e.message}"
+      die "Unable to #{object.nil? ? "open" : "write"} yaml : #{path} :  #{e.class.name}"
     end
+    result
   end
   
   def load_yaml
@@ -132,8 +146,6 @@ EOA
     seriallize(@path, object) {|f, o| YAML::dump(o, f)}
   end
 end
-
-
 
 # main routine
 
