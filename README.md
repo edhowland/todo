@@ -8,9 +8,10 @@ Save td in your PATH
 
 = Usage
 
-`td init .   # create a new .todo list`
-`td push TODO write a message`
-`td          #=> TODO write a message`
-`td aliases >.alias`
-`source .alias`
-`td.info`
+`td init .   # create a new .todo list
+td push TODO write a message
+td          #=> TODO write a message
+td aliases >.alias
+source .alias
+td.info
+`
