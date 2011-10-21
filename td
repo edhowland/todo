@@ -56,16 +56,16 @@ def expression argv, tree=[]
 end
 
 
-@queue = []
-
 class Internals
-  def initialize queue
-    @queue = queue
+  attr_accessor :path, :queue
+  
+  def initialize path='./.todo', queue=nil
+    @path = path
+    @queue = queue || load_yaml 
   end
 
-  def init
+  def init path=nil
     @queue.clear
-    dump_yaml @queue
     ".todo initialized"
   end
 
@@ -105,35 +105,37 @@ EOA
        Options: N/A
   EOH
   end
-end
-
-def todo_path
-  "./.todo" # or ~/.todo
-end
-
-def seriallize path, object=nil, &blk 
-  begin
-    args = [path]; args << "w" unless object.nil?
-    result=[]
-      File.open(*args) do |f| 
-     result = yield f, object
+  
+  def save
+    dump_yaml @queue
+  end
+  
+  private
+  def seriallize path, object=nil, &blk 
+    begin
+      args = [path]; args << "w" unless object.nil?
+      result=[]
+        File.open(*args) do |f| 
+       result = yield f, object
+      end
+      result
+    rescue Exception => e
+      die "Unable to #{object.nil? ? "open" : "write"} yaml : #{path} :  #{e.message}"
     end
-    result
-  rescue Exception => e
-    die "Unable to #{object.nil? ? "open" : "write"} yaml : #{path} :  #{e.message}"
+  end
+  
+  def load_yaml
+    seriallize(@path) {|f, o| YAML::load(f)}
+  end
+
+  def dump_yaml object
+    seriallize(@path, object) {|f, o| YAML::dump(o, f)}
   end
 end
 
-def load_yaml
-  seriallize(todo_path) {|f, o| YAML::load(f)}
-end
 
-def dump_yaml object
-  seriallize(todo_path, object) {|f, o| YAML::dump(o, f)}
-end
 
 # main routine
-@internals = Internals.new @queue
 
 def execute queue, cmd
   com = cmd.shift.to_sym
@@ -146,9 +148,9 @@ def execute queue, cmd
   end
 end
 
-tree = expression ARGV
-cmd = walk(tree)
+tree = expression ARGV  # parse ARGV to AST
+cmd = walk(tree)        # form command stack of primatives
 
-@queue = load_yaml
-puts execute @queue, cmd
-dump_yaml @queue
+@internals = Internals.new
+puts execute @internals.queue, cmd
+@internals.save
