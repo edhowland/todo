@@ -162,7 +162,7 @@ end
 
 tree = expression ARGV  # parse ARGV to AST
 cmd = walk(tree)        # form command stack of primatives
-
+cmd[0] = "last" if cmd[0].nil?
 @internals = Internals.new
 puts execute @internals.queue, cmd
 @internals.save
